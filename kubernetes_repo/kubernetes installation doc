@@ -1,0 +1,112 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2709
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fmodern\fcharset0 Courier;}
+{\colortbl;\red255\green255\blue255;\red255\green255\blue255;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\cssrgb\c100000\c100000\c99985;\cssrgb\c0\c1\c1;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\partightenfactor0
+
+\f0\fs26 \cf2 \cb3 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Google Cloud SSH Key Generate: https://cloud.google.com/compute/docs/connect/create-ssh-keys
+
+http://34.27.219.181/index.txt
+
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC1S55KwjntaolJT0boZdX03vHx5Tsh+ZHpwp7XlSkyLUzCd7I9/ABUlUeWhHws2Ld7ieEEJb8Doc+3s950SPk1BkTIhPLBiNKiPoN+OXu3yKnx10JsS7oNgkICXfVps2SOicdng8Z7UvIqWtYAV6fj4+ERFNjIpjvnocvNBNpruK0DfD1yRFK3iafKC2OBN2yLCCgTB73AuwKo1U7lXXyi9yomb9LUauscs4zesuHNGzdRqo/o/CFHRzn2UbewRcw/FBH2SVfxDmF+6pwrflRIBv9npZ+m91vTO8kG3DtvQZG7ll7BVd0q0jTqgu6cxJJyjeGmFE3mHhVVaXHSPwBd janak
+
+Master: 34.125.145.81
+Node1: 34.16.184.39
+Node2: 34.125.26.41
+
+cd .ssh 
+ssh -i kubernetesmaster janak@34.125.145.81
+
+
+ssh-keygen -t rsa -f ~/.ssh/google_cloud_kub -C janak -b 2048
+
+Ref. Link Kubernetes Installation: https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+
+
+* Install Below Pakcages on All the nodes **
+
+cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+br_netfilter
+EOF
+
+cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+EOF
+
+sudo sysctl --system
+
+
+
+sudo apt-get update
+sudo apt-get install -y apt-transport-https ca-certificates curl
+sudo apt install docker.io -y
+
+sudo systemctl enable docker
+
+mkdir -p /etc/apt/keyrings
+
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.27/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.27/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+sudo apt-get update
+sudo apt-get install -y kubelet kubeadm kubectl
+sudo apt-mark hold kubelet kubeadm kubectl
+
+
+cat > /etc/docker/daemon.json <<EOF
+{
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "log-driver": "json-file",
+  "log-opts": \{
+    "max-size": "100m"
+  },
+  "storage-driver": "overlay2"
+}
+EOF
+
+systemctl restart docker
+
+
+
+# Creating a cluster with kubeadm  (Run Command on Master Node Only)
+
+
+Initializing your control-plane node
+
+
+kubeadm init
+
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+
+kubectl get node
+
+wait for few minute till it shows list of node 
+
+
+kubeadm join 10.128.0.3:6443 --token 8z9aox.vjjbkucj2ar78dtu \\
+	--discovery-token-ca-cert-hash sha256:e5b805c22938d5d169b3a8b69162f47df2d313b967f619c584cf11dee4a1ff28
+
+weave network
+
+https://www.weave.works/docs/net/latest/kubernetes/kube-addon/
+
+
+kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
+
+# Kubernetes Auto Completion\
+
+echo 'source <(kubectl completion bash)' >>~/.bashrc
+
+echo 'alias k=kubectl' >>~/.bashrc
+echo 'complete -F __start_kubectl k' >>~/.bashrc
+
+source .bashrc

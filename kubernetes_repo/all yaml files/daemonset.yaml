@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: first-daemonset
+  namespace: usama-qa
+  labels:
+    tier: app
+spec:
+  selector:
+    matchLabels:
+      tier: app
+  template:
+    metadata:
+      labels:
+        tier: app
+    spec:
+      containers:
+      - name: daemon-test
+        image: nginx:1.16.1

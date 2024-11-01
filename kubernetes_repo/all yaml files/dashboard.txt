@@ -1,0 +1,12 @@
+#to see the metric server
+wget https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+
+
+#to get a file and change service to NodePort in the file as we have to acces this dashboard from outside
+https://komodor.com/learn/kubernetes-dashboard/
+wget -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.6.1/aio/deploy/recommended.yaml
+#change the service
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.6.1/aio/deploy/recommended.yaml
+kubectl get all -n kubernetes-dashboard

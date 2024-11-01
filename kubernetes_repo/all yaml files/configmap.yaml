@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: mysql-2
+spec:
+ selector:
+   matchLabels:
+     app: mysql-2
+ template:
+   metadata:
+     labels:
+       app: mysql-2
+   spec:
+     containers:
+     - image: mysql:5.7
+       name: mysql-2
+       env:
+       - name: MYSQL_ROOT_PASSWORD
+         value: Root@123
+       - name: MYSQL_USER
+         value: usama
+       - name: MYSQL_PASSWORD
+         value: Redhat@123

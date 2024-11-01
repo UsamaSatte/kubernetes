@@ -1,0 +1,13 @@
+# Find the latest 1.31 version in the list.
+# It should look like 1.31.x-*, where x is the latest patch.
+sudo apt update
+sudo apt-cache madison kubeadm
+
+#Similar to an upgrade, you should drain the node before downgrading to avoid disrupting workloads:
+kubectl drain <node-name> --ignore-daemonsets --delete-local-data
+
+#SSH into the node, and downgrade kubeadm to the target version:
+sudo apt-get install -y kubeadm=<lower-version>
+
+
+#Once kubeadm is downgraded, use it to rollback the version of the node components:
